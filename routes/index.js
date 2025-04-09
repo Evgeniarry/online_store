@@ -122,4 +122,109 @@ router.get('/catalog', (req, res) => {
   });
 });
 
+// Добавление в корзину
+router.post('/cart/add', (req, res) => {
+    try {
+      // Инициализация корзины, если её нет
+      if (!req.session.cart) {
+        req.session.cart = [];
+      }
+  
+      const { id, name, price, image } = req.body;
+      
+      // Валидация данных
+      if (!id || !name || !price) {
+        return res.status(400).json({ 
+          success: false,
+          error: 'Необходимы id, name и price товара'
+        });
+      }
+  
+      // Поиск существующего товара
+      const existingItem = req.session.cart.find(item => item.id === id);
+      
+      if (existingItem) {
+        existingItem.quantity += 1;
+      } else {
+        req.session.cart.push({
+          id,
+          name,
+          price: Number(price),
+          image: image || '/images/placeholder.jpg',
+          quantity: 1
+        });
+      }
+      
+      // Сохраняем сессию явно
+      req.session.save(err => {
+        if (err) {
+          console.error('Ошибка сохранения сессии:', err);
+          return res.status(500).json({ 
+            success: false,
+            error: 'Ошибка сервера'
+          });
+        }
+        
+        res.json({ 
+          success: true,
+          cart: req.session.cart
+        });
+      });
+      
+    } catch (err) {
+      console.error('Ошибка добавления в корзину:', err);
+      res.status(500).json({ 
+        success: false,
+        error: 'Внутренняя ошибка сервера'
+      });
+    }
+  });
+  
+  // Обновление количества
+  router.post('/cart/update', (req, res) => {
+    try {
+      const { id, quantity } = req.body;
+      
+      if (!id || !quantity) {
+        return res.status(400).json({ error: 'Недостаточно данных' });
+      }
+  
+      if (!req.session.cart) {
+        return res.json({ success: false });
+      }
+  
+      const item = req.session.cart.find(item => item.id === id);
+      if (item) {
+        item.quantity = parseInt(quantity);
+      }
+      
+      res.json({ success: true, cart: req.session.cart });
+    } catch (err) {
+      console.error('Ошибка обновления корзины:', err);
+      res.status(500).json({ error: 'Ошибка сервера' });
+    }
+  });
+  
+  // Удаление из корзины
+  router.post('/cart/remove', (req, res) => {
+    try {
+      const { id } = req.body;
+      
+      if (!id) {
+        return res.status(400).json({ error: 'Не указан ID товара' });
+      }
+  
+      if (!req.session.cart) {
+        return res.json({ success: false });
+      }
+  
+      req.session.cart = req.session.cart.filter(item => item.id !== id);
+      
+      res.json({ success: true, cart: req.session.cart });
+    } catch (err) {
+      console.error('Ошибка удаления из корзины:', err);
+      res.status(500).json({ error: 'Ошибка сервера' });
+    }
+  });
+
 module.exports = router;

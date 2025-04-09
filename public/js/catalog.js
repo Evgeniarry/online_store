@@ -118,6 +118,33 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
   
+// Обработчик добавления в корзину
+document.querySelectorAll('.add-to-cart').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const product = {
+        id: this.dataset.id,
+        name: this.dataset.name,
+        price: this.dataset.price,
+        image: this.dataset.image
+      };
+      
+      fetch('/cart/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(product)
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Можно добавить анимацию или уведомление
+          alert('Товар добавлен в корзину!');
+        }
+      });
+    });
+  });
+
     // Инициализация при загрузке
     applyFilters();
   });

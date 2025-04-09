@@ -1,0 +1,53 @@
+<%- include('../partials/header') %>
+
+<div class="cart-container">
+  <h1 class="cart-title">Ваша корзина</h1>
+  
+  <% if (cartItems.length > 0) { %>
+    <div class="cart-items">
+      <% cartItems.forEach(item => { %>
+        <div class="cart-item" data-id="<%= item.id %>">
+          <div class="item-image">
+            <img src="<%= item.image || '/images/placeholder.jpg' %>" alt="<%= item.name %>">
+          </div>
+          <div class="item-details">
+            <h3 class="item-name"><%= item.name %></h3>
+            <p class="item-price"><%= item.price.toLocaleString() %> ₽</p>
+            <div class="item-quantity">
+              <button class="quantity-btn minus">-</button>
+              <span class="quantity"><%= item.quantity %></span>
+              <button class="quantity-btn plus">+</button>
+            </div>
+          </div>
+          <div class="item-actions">
+            <button class="remove-btn">Удалить</button>
+            <p class="item-total">Итого: <span><%= (item.price * item.quantity).toLocaleString() %> ₽</span></p>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+
+    <div class="cart-summary">
+      <div class="summary-row">
+        <span>Товаров:</span>
+        <span class="total-items"><%= cartItems.reduce((sum, item) => sum + item.quantity, 0) %></span>
+      </div>
+      <div class="summary-row">
+        <span>Общая сумма:</span>
+        <span class="total-price"><%= cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0).toLocaleString() %> ₽</span>
+      </div>
+      <button class="checkout-btn">Оформить заказ</button>
+    </div>
+  <% } else { %>
+    <div class="empty-cart">
+      <img src="/images/empty-cart.svg" alt="Корзина пуста">
+      <h2>Ваша корзина пуста</h2>
+      <p>Перейдите в каталог, чтобы добавить товары</p>
+      <a href="/catalog" class="btn">В каталог</a>
+    </div>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>
+
+<script src="/js/cart.js"></script>
