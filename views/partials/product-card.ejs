@@ -1,0 +1,15 @@
+<!-- views/partials/product-card.ejs -->
+<div class="product-card">
+    <div class="product-image">
+      <a href="/product/<%= product.id %>">
+        <img src="<%= product.image || '/images/placeholder.jpg' %>" alt="<%= product.name %>">
+      </a>
+    </div>
+    <div class="product-info">
+      <h3 class="product-title">
+        <a href="/product/<%= product.id %>"><%= product.name %></a>
+      </h3>
+      <p class="product-price"><%= product.price.toLocaleString() %> ₽</p>
+      <button class="btn add-to-cart" data-id="<%= product.id %>">В корзину</button>
+    </div>
+  </div>

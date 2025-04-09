@@ -227,4 +227,23 @@ router.post('/cart/add', (req, res) => {
     }
   });
 
+// Страница товара
+router.get('/product/:id', (req, res) => {
+    const productId = parseInt(req.params.id);
+    const product = mockProducts.find(p => p.id === productId);
+    
+    if (!product) {
+      return res.status(404).render('pages/404', { title: 'Товар не найден' });
+    }
+    
+    res.render('pages/product', {
+      title: product.name,
+      product,
+      mockCategories, // Передаем mockCategories в шаблон
+      relatedProducts: mockProducts.filter(p => 
+        p.category_id === product.category_id && p.id !== product.id
+      ).slice(0, 3)
+    });
+  });
+
 module.exports = router;

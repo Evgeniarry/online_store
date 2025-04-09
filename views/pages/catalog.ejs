@@ -64,10 +64,12 @@
              data-price="<%= product.price %>" 
              data-category="<%= product.category_id %>">
           <div class="product-image">
+            <a href="/product/<%= product.id %>">  <!-- Добавлено -->
             <img src="<%= product.image || '/images/placeholder.jpg' %>" alt="<%= product.name %>">
           </div>
           <div class="product-info">
             <h3 class="product-title"><%= product.name %></h3>
+            <a href="/product/<%= product.id %>"><%= product.name %></a>  <!-- Добавлено -->
             <div class="product-price"><%= product.price.toLocaleString() %> ₽</div>
             <button class="add-to-cart" 
         data-id="<%= product.id %>"

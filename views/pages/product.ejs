@@ -1,0 +1,109 @@
+<%- include('../partials/header') %>
+
+<main class="product-page">
+  <div class="container">
+    <!-- Хлебные крошки -->
+    <nav class="breadcrumbs">
+      <a href="/">Главная</a> &gt;
+      <a href="/catalog">Каталог</a> &gt;
+      <span><%= product.name %></span>
+    </nav>
+
+    <!-- Основная информация о товаре -->
+    <section class="product-details">
+      <div class="product-gallery">
+        <img src="<%= product.image || '/images/placeholder.jpg' %>" alt="<%= product.name %>">
+      </div>
+      
+      <div class="product-info">
+        <h1><%= product.name %></h1>
+        
+        <div class="product-meta">
+          <% if (product.rating) { %>
+            <div class="rating">
+              <% for (let i = 1; i <= 5; i++) { %>
+                <span class="star <%= i <= product.rating ? 'filled' : '' %>">★</span>
+              <% } %>
+            </div>
+          <% } %>
+          
+          <% if (product.is_new) { %>
+            <span class="badge">Новинка</span>
+          <% } %>
+        </div>
+
+        <div class="product-price">
+          <%= product.price.toLocaleString() %> ₽
+        </div>
+
+        <button class="btn add-to-cart" data-id="<%= product.id %>">Добавить в корзину</button>
+
+        <div class="product-description">
+          <h3>Описание</h3>
+          <p><%= product.description %></p>
+        </div>
+
+        <!-- Дополнительные характеристики -->
+        <div class="product-specs">
+          <h3>Характеристики</h3>
+          <ul>
+            <li><strong>Категория:</strong> 
+              <%= mockCategories.find(c => c.id === product.category_id)?.name || 'Не указана' %>
+            </li>
+            <!-- Можно добавить больше полей -->
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Похожие товары -->
+    <% if (relatedProducts.length > 0) { %>
+      <section class="related-products">
+        <h2>Похожие товары</h2>
+        <div class="products-grid">
+          <% relatedProducts.forEach(product => { %>
+            <%- include('../partials/product-card', { product }) %>
+          <% }) %>
+        </div>
+      </section>
+    <% } %>
+  </div>
+</main>
+
+<%- include('../partials/footer') %>
+
+<script>
+  // Обработчик добавления в корзину
+  document.querySelector('.add-to-cart')?.addEventListener('click', async () => {
+    const productId = <%= product.id %>;
+    
+    try {
+      const response = await fetch('/cart/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: productId,
+          name: '<%= product.name %>',
+          price: <%= product.price %>,
+          image: '<%= product.image || '' %>'
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        alert('Товар добавлен в корзину');
+        // Можно обновить счетчик корзины в шапке
+        const cartCounter = document.querySelector('.cart-counter');
+        if (cartCounter) {
+          cartCounter.textContent = result.cart.reduce((sum, item) => sum + item.quantity, 0);
+        }
+      } else {
+        alert('Ошибка: ' + (result.error || 'Не удалось добавить товар'));
+      }
+    } catch (err) {
+      console.error('Ошибка:', err);
+      alert('Ошибка соединения');
+    }
+  });
+</script>
