@@ -1,0 +1,81 @@
+<%- include('../partials/header') %>
+
+<div class="products-section">
+    <div class="controls-panel">
+      <!-- Сортировка -->
+      <div class="sort-control">
+        <label for="sortSelect">Сортировка:</label>
+        <select id="sortSelect" class="sort-select">
+          <option value="default">По умолчанию</option>
+          <option value="price_asc">По возрастанию цены</option>
+          <option value="price_desc">По убыванию цены</option>
+          <option value="name_asc">По названию (А-Я)</option>
+          <option value="name_desc">По названию (Я-А)</option>
+        </select>
+      </div>
+      
+      <!-- Поиск -->
+      <div class="search-control">
+        <input type="text" id="searchInput" placeholder="Поиск по названию...">
+      </div>
+    </div>
+
+    <div class="filters-sidebar">
+        <!-- Фильтр по цене -->
+        <div class="filter-group">
+          <h4 class="filter-name">Цена, ₽</h4>
+          <div class="price-filter">
+            <div class="price-inputs">
+              <input type="number" id="minPriceInput" placeholder="От" min="0">
+              <span>-</span>
+              <input type="number" id="maxPriceInput" placeholder="До" min="0">
+            </div>
+            <div class="price-slider">
+              <input type="range" id="priceRange" min="0" max="100000" step="1000" value="100000">
+            </div>
+          </div>
+        </div>
+        
+        <!-- Фильтр по категориям -->
+        <div class="filter-group">
+          <h4 class="filter-name">Категории</h4>
+          <ul class="category-list">
+            <% categories.forEach(category => { %>
+              <li class="category-item">
+                <label class="category-label">
+                  <input type="checkbox" 
+                         name="category" 
+                         value="<%= category.id %>"
+                         class="category-checkbox">
+                  <span class="custom-checkbox"></span>
+                  <span class="category-name"><%= category.name %></span>
+                  <span class="product-count">(<%= category.count %>)</span>
+                </label>
+              </li>
+            <% }) %>
+          </ul>
+        </div>
+      </div>
+  
+    <!-- Сетка товаров -->
+    <div class="products-grid">
+      <% products.forEach(product => { %>
+        <div class="product-card" 
+             data-price="<%= product.price %>" 
+             data-category="<%= product.category_id %>">
+          <div class="product-image">
+            <img src="<%= product.image || '/images/placeholder.jpg' %>" alt="<%= product.name %>">
+          </div>
+          <div class="product-info">
+            <h3 class="product-title"><%= product.name %></h3>
+            <div class="product-price"><%= product.price.toLocaleString() %> ₽</div>
+            <button class="add-to-cart">В корзину</button>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+
+<%- include('../partials/footer') %>
+
+<script src="/js/catalog.js"></script>
