@@ -1,0 +1,9 @@
+<%- include('../partials/header') %>
+
+<h1>Личный кабинет</h1>
+<p>Добро пожаловать, <%= user.username %>!</p>
+<p>Email: <%= user.email %></p>
+<p>Дата регистрации: <%= new Date(user.created_at).toLocaleDateString() %></p>
+<a href="/auth/logout">Выйти</a>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,43 @@
+<%- include('../partials/header', { title: 'Вход в систему' }) %>
+
+<div class="auth-container">
+  <% if (error) { %>
+    <div class="alert alert-danger">
+      Неверный логин или пароль
+    </div>
+  <% } %>
+
+  <form action="/auth/login" method="post" class="auth-form">
+    <div class="form-group">
+      <label for="username">Логин</label>
+      <input 
+        type="text" 
+        id="username" 
+        name="username" 
+        class="form-control"
+        placeholder="Введите ваш логин" 
+        required
+      >
+    </div>
+
+    <div class="form-group">
+      <label for="password">Пароль</label>
+      <input 
+        type="password" 
+        id="password" 
+        name="password" 
+        class="form-control"
+        placeholder="Введите ваш пароль" 
+        required
+      >
+    </div>
+
+    <button type="submit" class="btn btn-primary">Войти</button>
+  </form>
+
+  <div class="auth-links">
+    <a href="/auth/register">Ещё нет аккаунта? Зарегистрируйтесь</a>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
