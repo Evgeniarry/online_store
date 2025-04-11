@@ -1,45 +1,48 @@
-const express = require('express');
-const path = require('path');
+import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import session from 'express-session';
+import indexRouter from './routes/index.js';
+import cartRouter from './routes/cart.js'; // Теперь импорт будет работать
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
 const port = 3000;
-const session = require('express-session');
 
-// Добавьте ПЕРЕД роутами
 app.use(session({
-  secret: 'your-secret-key', // Замените на реальный секрет
+  secret: 'your-secret-key',
   resave: false,
   saveUninitialized: true,
-  cookie: { secure: false } // Для HTTPS установите true
+  cookie: { secure: false }
 }));
 
-app.use(express.json()); // для Content-Type: application/json
-app.use(express.urlencoded({ extended: true })); // для форм
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Настройка шаблонизатора EJS
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Middleware для статических файлов
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Подключение роутера (ДОЛЖНО БЫТЬ ПОСЛЕ настройки EJS и static)
-const indexRouter = require('./routes/index');
-app.use('/', indexRouter);
-
-// Middleware для проверки инициализации корзины
 app.use((req, res, next) => {
-    if (!req.session.cart) {
-      req.session.cart = [];
-    }
-    next();
-  });
+  if (!req.session.cart) req.session.cart = [];
+  next();
+});
 
-  const cartRouter = require('./routes/cart'); // Добавьте эту строку
+app.use('/', indexRouter);
+app.use('/cart', cartRouter); // Теперь маршруты cart будут работать
 
-  // Подключение роутов (после middleware)
-  app.use('/cart', cartRouter); // Добавьте эту строку
+app.use((req, res) => {
+  res.status(404).render('pages/404', { title: 'Страница не найдена' });
+});
 
-// Запуск сервера
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).render('pages/500', { title: 'Ошибка сервера' });
+});
+
 app.listen(port, () => {
-    console.log(`Сервер запущен на http://localhost:${port}`);
+  console.log(`Сервер запущен на http://localhost:${port}`);
 });
