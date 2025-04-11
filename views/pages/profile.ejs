@@ -1,9 +1,40 @@
-<%- include('../partials/header') %>
+<%- include('../partials/header', { title: 'Личный кабинет' }) %>
 
-<h1>Личный кабинет</h1>
-<p>Добро пожаловать, <%= user.username %>!</p>
-<p>Email: <%= user.email %></p>
-<p>Дата регистрации: <%= new Date(user.created_at).toLocaleDateString() %></p>
-<a href="/auth/logout">Выйти</a>
+<div class="profile-container">
+  <div class="profile-header">
+    <h1>Личный кабинет</h1>
+    <p>Добро пожаловать, <%= user.username %>!</p>
+  </div>
+
+  <div class="profile-info">
+    <div class="info-card">
+      <div class="info-item">
+        <span class="info-label">Имя пользователя</span>
+        <span class="info-value"><%= user.username %></span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Email</span>
+        <span class="info-value"><%= user.email %></span>
+      </div>
+    </div>
+
+    <div class="info-card">
+      <div class="info-item">
+        <span class="info-label">Дата регистрации</span>
+        <span class="info-value"><%= new Date(user.created_at).toLocaleDateString() %></span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Статус аккаунта</span>
+        <span class="info-value">Активен</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="profile-actions">
+    <a href="/profile/edit" class="action-btn secondary-btn">Редактировать профиль</a>
+    <a href="/orders" class="action-btn primary-btn">Мои заказы</a>
+    <a href="/auth/logout" class="action-btn danger-btn">Выйти</a>
+  </div>
+</div>
 
 <%- include('../partials/footer') %>
