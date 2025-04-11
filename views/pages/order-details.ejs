@@ -1,0 +1,33 @@
+<%- include('../partials/header', { title: `Заказ #${order.id}` }) %>
+
+<div class="order-details-container">
+  <h1>Детали заказа #<%= order.id %></h1>
+  
+  <div class="order-info">
+    <p><strong>Дата:</strong> <%= new Date(order.created_at).toLocaleString() %></p>
+    <p><strong>Статус:</strong> <span class="status-badge <%= order.status.toLowerCase() %>">
+      <%= order.status %>
+    </span></p>
+    <p><strong>Итого:</strong> <%= order.total ? parseFloat(order.total).toFixed(2) : '0.00' %> ₽</p>
+  </div>
+
+  <h2>Состав заказа</h2>
+  <div class="order-items">
+    <% items.forEach(item => { %>
+      <div class="order-item">
+        <img src="<%= item.image %>" alt="<%= item.name %>" width="80">
+        <div class="item-info">
+          <h3><%= item.name %></h3>
+          <p><%= order.total ? parseFloat(order.total).toFixed(2) : '0.00' %> ₽</p>
+        </div>
+        <div class="item-total">
+          <%= (item.price * item.quantity).toFixed(2) %> ₽
+        </div>
+      </div>
+    <% }); %>
+  </div>
+
+  <a href="/orders" class="back-btn">← Назад к списку заказов</a>
+</div>
+
+<%- include('../partials/footer') %>

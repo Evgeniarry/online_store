@@ -1600,3 +1600,53 @@ body {
 .primary-btn:hover {
   background-color: #0d8bf2;
 }
+
+.order-details-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.order-info {
+  background: #f9f9f9;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.order-items {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.order-item {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.order-item:last-child {
+  border-bottom: none;
+}
+
+.item-info {
+  flex-grow: 1;
+  padding: 0 20px;
+}
+
+.item-info h3 {
+  margin: 0 0 5px 0;
+}
+
+.item-total {
+  font-weight: bold;
+}
+
+.back-btn {
+  display: inline-block;
+  margin-top: 20px;
+  color: #333;
+  text-decoration: none;
+}
