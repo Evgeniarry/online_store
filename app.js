@@ -58,6 +58,13 @@ app.use((req, res, next) => {
   next();
 });
 
+// В middleware или конкретных роутах
+app.use((req, res, next) => {
+  res.locals.user = req.user; // Passport сохраняет пользователя в req.user
+  res.locals.cartCount = req.session.cart?.length || 0;
+  next();
+});
+
 // Настройка шаблонизатора
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -67,12 +74,14 @@ import indexRouter from './routes/index.js';
 import cartRouter from './routes/cart.js';
 import authRouter from './routes/auth.js';
 import profileRouter from './routes/profile.js';
+import checkoutRouter from './routes/checkout.js';
 
 // Подключение роутеров
 app.use('/', indexRouter);
 app.use('/cart', cartRouter);
 app.use('/auth', authRouter);
 app.use(profileRouter);
+app.use('/checkout', checkoutRouter);
 
 // Middleware для проверки авторизации
 function checkAuth(req, res, next) {

@@ -1,0 +1,155 @@
+<%- include('../partials/header', { title: 'Подтверждение заказа' }) %>
+
+<div class="checkout-container">
+  <h1 class="checkout-title">Подтверждение заказа</h1>
+  
+  <div class="order-summary">
+    <h2>Ваш заказ</h2>
+    <div class="order-items">
+      <% cartItems.forEach(item => { %>
+        <div class="order-item">
+          <img src="<%= item.image %>" alt="<%= item.name %>">
+          <div class="item-info">
+            <h3><%= item.name %></h3>
+            <p><%= item.quantity %> × <%= item.price.toLocaleString() %> ₽</p>
+          </div>
+          <div class="item-total">
+            <%= (item.price * item.quantity).toLocaleString() %> ₽
+          </div>
+        </div>
+      <% }) %>
+    </div>
+
+    <div class="order-total">
+      <p>Товаров: <span><%= cartItems.reduce((sum, item) => sum + item.quantity, 0) %></span></p>
+      <p class="total">Итого: <span><%= total.toLocaleString() %> ₽</span></p>
+    </div>
+
+    <form id="checkout-form">
+      <button type="submit" class="btn btn-primary">
+        Подтвердить заказ
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Уведомление (изначально скрыто) -->
+<div id="notification" class="notification hidden">
+  <div class="notification-content">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <p>Заказ #<span id="order-id"></span> успешно оформлен!</p>
+    <button class="close-btn">&times;</button>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
+
+<script>
+  document.getElementById('checkout-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button');
+    btn.disabled = true;
+    btn.textContent = 'Оформляем...';
+
+    try {
+      const response = await fetch('/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        // Показываем уведомление с номером заказа
+        showNotification(data.orderId);
+        
+        // Обновляем счетчик корзины
+        updateCartUI(0);
+        
+        // Перенаправляем на главную через 3 секунды
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 3000);
+      } else {
+        alert(data.error || 'Ошибка оформления');
+        btn.disabled = false;
+        btn.textContent = 'Подтвердить заказ';
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      alert('Ошибка соединения');
+      btn.disabled = false;
+      btn.textContent = 'Подтвердить заказ';
+    }
+  });
+
+  // Функция показа уведомления
+  function showNotification(orderId) {
+    const notification = document.getElementById('notification');
+    document.getElementById('order-id').textContent = orderId;
+    notification.classList.remove('hidden');
+  }
+
+  // Закрытие уведомления по клику
+  document.querySelector('.close-btn').addEventListener('click', () => {
+    document.getElementById('notification').classList.add('hidden');
+  });
+
+  // Функция обновления UI корзины
+  function updateCartUI(count) {
+    const cartCounters = document.querySelectorAll('.cart-count');
+    cartCounters.forEach(el => el.textContent = count);
+  }
+</script>
+
+<style>
+  /* Стили для уведомления */
+  .notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #4CAF50;
+    color: white;
+    padding: 16px 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    z-index: 1000;
+    transform: translateX(100%);
+    animation: slideIn 0.3s forwards;
+  }
+
+  .notification-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .notification svg {
+    width: 24px;
+    height: 24px;
+    color: white;
+  }
+
+  .close-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    margin-left: 15px;
+    padding: 0 5px;
+  }
+
+  .hidden {
+    display: none;
+  }
+
+  @keyframes slideIn {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+  }
+</style>

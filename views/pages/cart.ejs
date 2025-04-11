@@ -36,7 +36,12 @@
         <span>Общая сумма:</span>
         <span class="total-price"><%= cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0).toLocaleString() %> ₽</span>
       </div>
-      <button class="checkout-btn">Оформить заказ</button>
+      
+      <% if (user) { %>
+        <a href="/checkout" class="checkout-btn">Оформить заказ</a>
+      <% } else { %>
+        <a href="/auth/login?returnTo=/checkout" class="checkout-btn">Войти для оформления</a>
+      <% } %>
     </div>
   <% } else { %>
     <div class="empty-cart">
