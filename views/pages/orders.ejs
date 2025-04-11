@@ -1,0 +1,48 @@
+<%- include('../partials/header', { title: 'Мои заказы' }) %>
+
+<div class="orders-container">
+  <div class="orders-header">
+    <h1>Мои заказы</h1>
+    <a href="/profile" class="back-btn">← Назад в профиль</a>
+  </div>
+
+  <% if (orders.length === 0) { %>
+    <div class="no-orders">
+      <p>У вас пока нет заказов</p>
+      <a href="/" class="action-btn primary-btn">Перейти к покупкам</a>
+    </div>
+  <% } else { %>
+    <div class="orders-list">
+      <table>
+        <thead>
+          <tr>
+            <th>№ заказа</th>
+            <th>Дата</th>
+            <th>Сумма</th>
+            <th>Статус</th>
+            <th>Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% orders.forEach(order => { %>
+            <tr>
+              <td><%= order.id %></td>
+              <td><%= new Date(order.created_at).toLocaleDateString() %></td>
+              <td><%= order.total ? parseFloat(order.total).toFixed(2) : '0.00' %> ₽</td>
+              <td>
+                <span class="status-badge <%= order.status.toLowerCase() %>">
+                  <%= order.status %>
+                </span>
+              </td>
+              <td>
+                <a href="/orders/<%= order.id %>" class="action-btn">Подробнее</a>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>

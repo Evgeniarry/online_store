@@ -6,6 +6,7 @@ import passport from 'passport';
 import LocalStrategy from 'passport-local';
 import bcrypt from 'bcrypt';
 import { query } from './db.js'; // Предполагая, что query находится здесь
+import { isAuthenticated } from './middleware/auth.js'; 
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -75,6 +76,7 @@ import cartRouter from './routes/cart.js';
 import authRouter from './routes/auth.js';
 import profileRouter from './routes/profile.js';
 import checkoutRouter from './routes/checkout.js';
+import ordersRouter from './routes/orders.js';
 
 // Подключение роутеров
 app.use('/', indexRouter);
@@ -82,6 +84,7 @@ app.use('/cart', cartRouter);
 app.use('/auth', authRouter);
 app.use(profileRouter);
 app.use('/checkout', checkoutRouter);
+app.use('/orders', isAuthenticated, ordersRouter); // ✅ Применяем middleware ко всем /orders/*
 
 // Middleware для проверки авторизации
 function checkAuth(req, res, next) {
