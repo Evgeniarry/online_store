@@ -68,14 +68,14 @@
             <img src="<%= product.image || '/images/placeholder.jpg' %>" alt="<%= product.name %>">
           </div>
           <div class="product-info">
-            <h3 class="product-title"><%= product.name %></h3>
+            <br>
             <a href="/product/<%= product.id %>"><%= product.name %></a>  <!-- Добавлено -->
             <div class="product-price"><%= product.price.toLocaleString() %> ₽</div>
             <button class="add-to-cart" 
         data-id="<%= product.id %>"
         data-name="<%= product.name %>"
         data-price="<%= product.price %>"
-        data-image="<%= product.image || '/images/placeholder.jpg' %>">
+        data-image="<%= product.image || '/images/plaseholder.jpg' %>">
   В корзину
 </button>
           </div>

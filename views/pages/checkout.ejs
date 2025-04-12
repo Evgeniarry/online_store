@@ -8,7 +8,7 @@
     <div class="order-items">
       <% cartItems.forEach(item => { %>
         <div class="order-item">
-          <img src="<%= item.image %>" alt="<%= item.name %>">
+          <img src="<%= item.image %>" alt="<%= item.name %>" width="80">
           <div class="item-info">
             <h3><%= item.name %></h3>
             <p><%= item.quantity %> × <%= item.price.toLocaleString() %> ₽</p>
