@@ -1,41 +1,45 @@
-const { Sequelize, DataTypes } = require('sequelize');
-const sequelize = new Sequelize('postgres://user:pass@localhost:5432/dbname');
+import { DataTypes } from 'sequelize';
 
-const Product = sequelize.define('Product', {
-    name: DataTypes.STRING,
-    price: DataTypes.FLOAT
-});
-
-module.exports = (sequelize, DataTypes) => {
-    const Product = sequelize.define('Product', {
-      name: {
-        type: DataTypes.STRING,
-        allowNull: false
-      },
-      price: {
-        type: DataTypes.DECIMAL(10, 2),
-        allowNull: false
-      },
-      description: DataTypes.TEXT,
-      image: DataTypes.STRING,
-      category_id: {
-        type: DataTypes.INTEGER,
-        references: {
-          model: 'Categories',
-          key: 'id'
-        }
+export default (sequelize) => {
+  const Product = sequelize.define('Product', {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true
+    },
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    description: DataTypes.TEXT,
+    price: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false,
+      get() {
+        return parseFloat(this.getDataValue('price')) || 0;
       }
-    }, {
-      timestamps: true,
-      underscored: true
+    },
+    category_id: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: 'Categories',
+        key: 'id'
+      }
+    },
+    image_url: DataTypes.STRING
+  }, {
+    timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: false,
+    tableName: 'products'
+  });
+
+  Product.associate = (models) => {
+    Product.belongsTo(models.Category, {
+      foreignKey: 'category_id',
+      as: 'category'
     });
-  
-    Product.associate = models => {
-      Product.belongsTo(models.Category, {
-        foreignKey: 'category_id',
-        as: 'category'
-      });
-    };
-  
-    return Product;
   };
+
+  return Product;
+};

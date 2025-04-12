@@ -1,7 +1,36 @@
 import { Router } from 'express';
 import { query } from '../db.js';
-
 const router = Router();
+
+// Вспомогательные функции
+function calculateTotalPrice(cart) {
+  return cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+}
+
+function calculateTotalItems(cart) {
+  return cart.reduce((sum, item) => sum + item.quantity, 0);
+}
+
+function saveSession(req) {
+  return new Promise((resolve, reject) => {
+    req.session.save(err => {
+      if (err) {
+        console.error('Ошибка сохранения сессии:', err);
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
+// Инициализация корзины для всех маршрутов
+router.use((req, res, next) => {
+  if (!req.session.cart) {
+    req.session.cart = [];
+  }
+  next();
+});
 
 router.get('/', (req, res) => {
   try {
@@ -27,23 +56,34 @@ router.get('/', (req, res) => {
   }
 });
 
+// Добавление в корзину
 router.post('/add', async (req, res) => {
   try {
     const { id } = req.body;
-    if (!id) return res.status(400).json({ error: 'Необходим ID товара' });
-
-    const { rows } = await query(
-      'SELECT id, name, price, image_url FROM products WHERE id = $1', 
-      [id]
-    );
-
-    if (!rows.length) {
-      return res.status(404).json({ error: 'Товар не найден' });
+    
+    if (!id) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Необходим ID товара'
+      });
     }
-
+    
+    const { rows } = await query(`
+      SELECT id, name, price, image_url 
+      FROM products 
+      WHERE id = $1
+    `, [id]);
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'Товар не найден'
+      });
+    }
+    
     const product = rows[0];
     const existingItem = req.session.cart.find(item => item.id === id);
-
+    
     if (existingItem) {
       existingItem.quantity += 1;
     } else {
@@ -55,48 +95,148 @@ router.post('/add', async (req, res) => {
         quantity: 1
       });
     }
-
-    req.session.save();
-    res.json({ success: true, cart: req.session.cart });
-
+    
+    await saveSession(req);
+    
+    res.json({ 
+      success: true,
+      cart: req.session.cart,
+      totalItems: calculateTotalItems(req.session.cart),
+      totalPrice: calculateTotalPrice(req.session.cart)
+    });
+    
   } catch (err) {
-    console.error('Cart error:', err);
-    res.status(500).json({ error: 'Ошибка сервера' });
+    console.error('Ошибка добавления в корзину:', err);
+    res.status(500).json({ 
+      success: false,
+      error: 'Внутренняя ошибка сервера'
+    });
   }
 });
 
-router.post('/update', (req, res) => {
+// Обновление количества
+router.post('/update', async (req, res) => {
   try {
     const { id, quantity } = req.body;
-    if (!id || !quantity) return res.status(400).json({ error: 'Недостаточно данных' });
+    
+    // 1. Проверим, есть ли корзина в сессии
+    if (!req.session.cart) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Корзина не инициализирована' 
+      });
+    }
 
-    if (!req.session.cart) return res.json({ success: false });
+    // 2. Найдём товар (приведём id к числу, если нужно)
+    const item = req.session.cart.find(item => item.id == id); // Используем == вместо ===
+    
+    if (!item) {
+      console.error('Товар не найден. Ищем id:', id, 'В корзине:', req.session.cart);
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Товар не найден в корзине' 
+      });
+    }
 
-    const item = req.session.cart.find(item => item.id === id);
-    if (item) item.quantity = parseInt(quantity);
+    // 3. Обновим количество
+    item.quantity = parseInt(quantity);
+    
+    // 4. Сохраним сессию
+    await new Promise((resolve, reject) => {
+      req.session.save(err => {
+        if (err) {
+          console.error('Ошибка сохранения сессии:', err);
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
 
-    res.json({ success: true, cart: req.session.cart });
+    // 5. Отправим обновлённые данные
+    res.json({ 
+      success: true,
+      cart: req.session.cart,
+      totalItems: calculateTotalItems(req.session.cart),
+      totalPrice: calculateTotalPrice(req.session.cart)
+    });
+
   } catch (err) {
-    console.error('Update cart error:', err);
-    res.status(500).json({ error: 'Ошибка сервера' });
+    console.error('Ошибка обновления корзины:', err);
+    res.status(500).json({ success: false, error: 'Ошибка сервера' });
   }
 });
 
-router.post('/remove', (req, res) => {
+router.post('/remove', async (req, res) => {
   try {
+    console.log('=== START REMOVE ===');
+    console.log('Request body:', req.body);
     const { id } = req.body;
-    if (!id) return res.status(400).json({ error: 'Не указан ID товара' });
+    
+    if (!id) {
+      console.log('Ошибка: ID не указан');
+      return res.status(400).json({ 
+        success: false,
+        error: 'Не указан ID товара'
+      });
+    }
 
-    if (!req.session.cart) return res.json({ success: false });
+    if (!req.session.cart) {
+      console.log('Ошибка: Корзина не инициализирована');
+      return res.status(400).json({
+        success: false,
+        error: 'Корзина не инициализирована'
+      });
+    }
 
-    req.session.cart = req.session.cart.filter(item => item.id !== id);
-    res.json({ success: true, cart: req.session.cart });
+    console.log('Корзина до удаления:', req.session.cart);
+    console.log('Пытаемся удалить товар с ID:', id);
+    
+    const initialLength = req.session.cart.length;
+    req.session.cart = req.session.cart.filter(item => {
+      console.log(`Проверка товара: ${item.id} (${typeof item.id}) vs ${id} (${typeof id})`);
+      return item.id != id; // Используем != для гибкого сравнения
+    });
+    
+    console.log('Корзина после удаления:', req.session.cart);
+    
+    if (initialLength === req.session.cart.length) {
+      console.log('Товар не найден в корзине');
+      return res.status(404).json({
+        success: false,
+        error: 'Товар не найден в корзине'
+      });
+    }
 
+    try {
+      console.log('Пытаемся сохранить сессию...');
+      await saveSession(req);
+      console.log('Сессия успешно сохранена');
+      
+      const responseData = {
+        success: true, 
+        cart: req.session.cart,
+        totalPrice: calculateTotalPrice(req.session.cart),
+        totalItems: calculateTotalItems(req.session.cart)
+      };
+      
+      console.log('Отправляем ответ:', responseData);
+      res.json(responseData);
+      
+    } catch (saveErr) {
+      console.error('Ошибка сохранения сессии:', saveErr);
+      throw new Error('Не удалось сохранить изменения');
+    }
+    
   } catch (err) {
-    console.error('Remove from cart error:', err);
-    res.status(500).json({ error: 'Ошибка сервера' });
+    console.error('Ошибка удаления из корзины:', err);
+    res.status(500).json({ 
+      success: false,
+      error: err.message || 'Ошибка сервера'
+    });
+  } finally {
+    console.log('=== END REMOVE ===');
   }
 });
 
-// Явно экспортируем router как default
 export default router;

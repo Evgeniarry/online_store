@@ -118,33 +118,66 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
   
+
 // Обработчик добавления в корзину
 document.querySelectorAll('.add-to-cart').forEach(btn => {
-    btn.addEventListener('click', function() {
-      const product = {
-        id: this.dataset.id,
-        name: this.dataset.name,
-        price: this.dataset.price,
-        image: this.dataset.image
-      };
-      
-      fetch('/cart/add', {
+  btn.addEventListener('click', async function(e) {
+    e.preventDefault(); // Предотвращаем отправку формы
+    
+    const product = {
+      id: this.dataset.id,
+      name: this.dataset.name,
+      price: parseFloat(this.dataset.price),
+      image: this.dataset.image
+    };
+    
+    try {
+      const response = await fetch('/cart/add', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(product)
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          // Можно добавить анимацию или уведомление
-          alert('Товар добавлен в корзину!');
-        }
       });
-    });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // Красивое уведомление вместо alert
+        showNotification('Товар добавлен в корзину!');
+        updateCartCounter(data.totalItems);
+      } else {
+        showNotification(data.error || 'Ошибка добавления в корзину', 'error');
+      }
+    } catch (error) {
+      console.error('Ошибка:', error);
+      showNotification('Ошибка соединения', 'error');
+    }
   });
+});
+
+// Функция для показа уведомлений
+function showNotification(message, type = 'success') {
+  const notification = document.createElement('div');
+  notification.className = `notification ${type}`;
+  notification.textContent = message;
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.remove();
+  }, 3000);
+}
+
+// Обновление счетчика корзины
+function updateCartCounter(count) {
+  const counter = document.querySelector('.cart-counter');
+  if (counter) {
+    counter.textContent = count;
+    counter.classList.add('bounce');
+    setTimeout(() => counter.classList.remove('bounce'), 500);
+  }
+}
 
     // Инициализация при загрузке
     applyFilters();
-  });
+});

@@ -5,8 +5,10 @@ import session from 'express-session';
 import passport from 'passport';
 import LocalStrategy from 'passport-local';
 import bcrypt from 'bcrypt';
-import { query } from './db.js'; // Предполагая, что query находится здесь
+import listEndpoints from 'express-list-endpoints';
+import { query } from './db.js';
 import { isAuthenticated } from './middleware/auth.js'; 
+import cors from 'cors';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,15 +16,25 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const port = 3000;
 
-// Настройка сессии
+// 1. Базовые middleware (самые первые)
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(cors());
+
+// 2. Настройка сессии (до passport)
 app.use(session({
   secret: 'your-secret-key',
   resave: false,
   saveUninitialized: true,
-  cookie: { secure: false }
+  cookie: { 
+    secure: false,
+    sameSite: 'lax',
+    maxAge: 86400000
+  }
 }));
 
-// Настройка Passport
+// 3. Настройка Passport
 passport.use(new LocalStrategy(
   async (username, password, done) => {
     try {
@@ -49,28 +61,19 @@ passport.deserializeUser(async (id, done) => {
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
-
+// 4. Общие middleware
 app.use((req, res, next) => {
+  res.locals.user = req.user;
   if (!req.session.cart) req.session.cart = [];
+  res.locals.cartCount = req.session.cart.length;
   next();
 });
 
-// В middleware или конкретных роутах
-app.use((req, res, next) => {
-  res.locals.user = req.user; // Passport сохраняет пользователя в req.user
-  res.locals.cartCount = req.session.cart?.length || 0;
-  next();
-});
-
-// Настройка шаблонизатора
+// 5. Настройка шаблонизатора
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Импорт роутеров
+// 6. Подключение роутеров (после ВСЕХ middleware)
 import indexRouter from './routes/index.js';
 import cartRouter from './routes/cart.js';
 import authRouter from './routes/auth.js';
@@ -78,26 +81,20 @@ import profileRouter from './routes/profile.js';
 import checkoutRouter from './routes/checkout.js';
 import ordersRouter from './routes/orders.js';
 
-// Подключение роутеров
 app.use('/', indexRouter);
 app.use('/cart', cartRouter);
 app.use('/auth', authRouter);
 app.use(profileRouter);
 app.use('/checkout', checkoutRouter);
-app.use('/orders', isAuthenticated, ordersRouter); // ✅ Применяем middleware ко всем /orders/*
+app.use('/orders', isAuthenticated, ordersRouter);
 
-// Middleware для проверки авторизации
-function checkAuth(req, res, next) {
-  if (req.isAuthenticated()) return next();
-  res.redirect('/auth/login');
-}
-
-// Защищенный маршрут (один экземпляр)
-app.get('/protected-route', checkAuth, (req, res) => {
-  res.send('Только для авторизованных');
+// 7. Вывод роутов (после подключения всех)
+app.on('mount', () => {
+  console.log('Registered routes:');
+  console.log(listEndpoints(app));
 });
 
-// Обработка ошибок
+// 8. Обработка ошибок (самые последние)
 app.use((req, res) => {
   res.status(404).render('pages/404', { title: 'Страница не найдена' });
 });
@@ -110,4 +107,10 @@ app.use((err, req, res, next) => {
 // Запуск сервера
 app.listen(port, () => {
   console.log(`Сервер запущен на http://localhost:${port}`);
+  
+  // Альтернативный способ вывода роутов после запуска
+  setTimeout(() => {
+    console.log('\nFinal routes:');
+    console.log(listEndpoints(app));
+  }, 100);
 });
