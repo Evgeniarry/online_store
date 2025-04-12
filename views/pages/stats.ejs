@@ -1,0 +1,133 @@
+<%- include('../partials/header', { title: 'Подтверждение заказа' }) %>
+
+  <div class="container">
+    <h1>Статистика продаж</h1>
+    
+    <div class="summary-cards">
+        <div class="card">
+            <h3>Общий доход</h3>
+            <p>
+              <% if (totalStats && totalStats.total_revenue) { %>
+                <%= totalStats.total_revenue.toLocaleString('ru-RU') %> ₽
+              <% } else { %>
+                0 ₽
+              <% } %>
+            </p>
+          </div>
+      <div class="card">
+        <h3>Всего заказов</h3>
+        <p><%= totalStats.total_orders %></p>
+      </div>
+      <div class="card">
+        <h3>Средний чек</h3>
+        <p>
+            <% if (totalStats.avg_order_value) { %>
+              <%= Number(totalStats.avg_order_value).toFixed(2).toLocaleString('ru-RU') %> ₽
+            <% } else { %>
+              0.00 ₽
+            <% } %>
+          </p>
+      </div>
+    </div>
+
+    <div class="chart-container">
+      <h2>Продажи по месяцам</h2>
+      <canvas id="monthlyChart"></canvas>
+    </div>
+
+    <div class="tables-container">
+      <div class="top-products">
+        <h2>Топ товаров</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Товар</th>
+              <th>Продано</th>
+              <th>Доход</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% topProducts.forEach(product => { %>
+              <tr>
+                <td><%= product.product_name %></td>
+                <td><%= product.total_sold %></td>
+                <td><%= product.total_revenue.toLocaleString('ru-RU') %> ₽</td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="recent-orders">
+        <h2>Последние заказы</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Покупатель</th>
+              <th>Дата</th>
+              <th>Товаров</th>
+              <th>Сумма</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% recentOrders.forEach(order => { %>
+              <tr>
+                <td><%= order.id %></td>
+                <td><%= order.username %></td>
+                <td><%= new Date(order.created_at).toLocaleDateString() %></td>
+                <td><%= order.items_count %></td>
+                <td><%= order.total.toLocaleString('ru-RU') %> ₽</td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <%- include('../partials/footer') %>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const monthlyCtx = document.getElementById('monthlyChart');
+      
+      try {
+        const monthlyData = <%- JSON.stringify(monthlyStats) %>;
+        
+        if (monthlyData && monthlyData.length > 0) {
+          new Chart(monthlyCtx, {
+            type: 'bar',
+            data: {
+              labels: monthlyData.map(s => s.month),
+              datasets: [{
+                label: 'Доход (₽)',
+                data: monthlyData.map(s => parseFloat(s.revenue)),
+                backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+              }]
+            },
+            options: {
+              responsive: true,
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: {
+                    callback: function(value) {
+                      return value.toLocaleString('ru-RU') + ' ₽';
+                    }
+                  }
+                }
+              }
+            }
+          });
+        } else {
+          monthlyCtx.innerHTML = '<p>Нет данных для отображения</p>';
+        }
+      } catch (error) {
+        console.error('Error initializing chart:', error);
+        monthlyCtx.innerHTML = '<p>Ошибка при загрузке графика</p>';
+      }
+    });
+  </script>

@@ -9,6 +9,12 @@ import listEndpoints from 'express-list-endpoints';
 import { query } from './db.js';
 import { isAuthenticated } from './middleware/auth.js'; 
 import cors from 'cors';
+import {
+  getTotalStats,
+  getMonthlyStats,
+  getTopProducts,
+  getRecentOrders
+} from './queries.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -88,10 +94,27 @@ app.use(profileRouter);
 app.use('/checkout', checkoutRouter);
 app.use('/orders', isAuthenticated, ordersRouter);
 
-// 7. Вывод роутов (после подключения всех)
-app.on('mount', () => {
-  console.log('Registered routes:');
-  console.log(listEndpoints(app));
+app.get('/stats', isAuthenticated, async (req, res) => {
+  try {
+    const [totalStats, monthlyStats, topProducts, recentOrders] = await Promise.all([
+      getTotalStats(),
+      getMonthlyStats(),
+      getTopProducts(),
+      getRecentOrders()
+    ]);
+    
+    res.render('pages/stats', {
+      title: 'Статистика продаж',
+      user: req.user,
+      totalStats: totalStats || { total_revenue: 0, total_orders: 0, avg_order_value: 0 },
+      monthlyStats: monthlyStats || [],
+      topProducts: topProducts || [],
+      recentOrders: recentOrders || []
+    });
+  } catch (err) {
+    console.error('Ошибка при загрузке статистики:', err);
+    res.status(500).render('pages/500', { title: 'Ошибка сервера' });
+  }
 });
 
 // 8. Обработка ошибок (самые последние)
