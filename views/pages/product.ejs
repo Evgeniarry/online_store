@@ -68,7 +68,7 @@
           <% relatedProducts.forEach(related => { %>
             <div class="product-card">
               <a href="/products/<%= related.id %>">
-                <img src="<%= related.image_url || '/images/placeholder.jpg' %>" alt="<%= related.name %>">
+                <img src="<%= related.image_url || '/images/placeholder.jpg' %>" alt="<%= related.name %>"width='80'>
                 <h3><%= related.name %></h3>
                 <p class="price"><%= (Number(related.price) || 0).toFixed(2) %> ₽</p>
               </a>

@@ -9,14 +9,12 @@
           <option value="default">По умолчанию</option>
           <option value="price_asc">По возрастанию цены</option>
           <option value="price_desc">По убыванию цены</option>
-          <option value="name_asc">По названию (А-Я)</option>
-          <option value="name_desc">По названию (Я-А)</option>
         </select>
       </div>
       
       <!-- Поиск -->
       <div class="search-control">
-        <input type="text" id="searchInput" placeholder="Поиск по названию...">
+        
       </div>
     </div>
 
@@ -68,6 +66,7 @@
             <img src="<%= product.image || '/images/placeholder.jpg' %>" alt="<%= product.name %>">
           </div>
           <div class="product-info">
+            <br>
             <br>
             <a href="/product/<%= product.id %>"><%= product.name %></a>  <!-- Добавлено -->
             <div class="product-price"><%= product.price.toLocaleString() %> ₽</div>
