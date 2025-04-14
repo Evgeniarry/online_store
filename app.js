@@ -148,6 +148,22 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use((req, res, next) => {
+  // Проверяем согласие на cookies
+  const cookiesAccepted = req.cookies['cookies-accepted'] === 'true';
+  res.locals.cookiesAccepted = cookiesAccepted;
+  
+  // Если согласия нет и это не API запрос - устанавливаем только essential cookies
+  if (!cookiesAccepted && !req.path.startsWith('/api')) {
+    res.cookie('session-temp', generateUUID(), { 
+      httpOnly: true,
+      sameSite: 'lax'
+    });
+  }
+  
+  next();
+});
+
 // 5. Настройка шаблонизатора
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
