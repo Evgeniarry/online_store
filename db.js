@@ -6,12 +6,8 @@ dotenv.config();
 const { Pool } = pg;
 
 const pool = new Pool({
-  user: 'postgres',
-  host: 'localhost',
-  database: 'online_store_new',
-  password:'qwerty',
-  port: 5432,
-  client_encoding: 'UTF8'
+  connectionString: process.env.DATABASE_URL, // URL из настроек Render
+  ssl: { rejectUnauthorized: false } // Обязательно для Render!
 });
 
 // Функция для исправления кодировки
