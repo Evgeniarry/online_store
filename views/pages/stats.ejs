@@ -1,19 +1,19 @@
-<%- include('../partials/header', { title: 'Подтверждение заказа' }) %>
+<%- include('../partials/header', { title: 'Статистика' }) %>
 
   <div class="container">
     <h1>Статистика продаж</h1>
     
     <div class="summary-cards">
-        <div class="card">
-            <h3>Общий доход</h3>
-            <p>
-              <% if (totalStats && totalStats.total_revenue) { %>
-                <%= totalStats.total_revenue.toLocaleString('ru-RU') %> ₽
-              <% } else { %>
-                0 ₽
-              <% } %>
-            </p>
-          </div>
+      <div class="card">
+        <h3>Общий доход</h3>
+        <p>
+          <% if (totalStats && totalStats.total_revenue) { %>
+            <%= Number(totalStats.total_revenue).toLocaleString('ru-RU') %> ₽
+          <% } else { %>
+            0 ₽
+          <% } %>
+        </p>
+      </div>
       <div class="card">
         <h3>Всего заказов</h3>
         <p><%= totalStats.total_orders %></p>
@@ -28,12 +28,45 @@
             <% } %>
           </p>
       </div>
-    </div>
+<!-- Карточка уникальных посетителей -->
+<div class="card">
+  <h3>Посетители</h3>
+  <p>
+    <% if (visitorStats && visitorStats.unique_visitors) { %>
+      <%= Number(visitorStats.unique_visitors).toLocaleString('ru-RU') %>
+    <% } else { %>
+      0
+    <% } %>
+  </p>
+  <small>Уникальные за 30 дней</small>
+</div>
 
-    <div class="chart-container">
-      <h2>Продажи по месяцам</h2>
-      <canvas id="monthlyChart"></canvas>
-    </div>
+<!-- Карточка общего числа посещений -->
+<div class="card">
+  <h3>Просмотры</h3>
+  <p>
+    <% if (visitorStats && visitorStats.total_visits) { %>
+      <%= Number(visitorStats.total_visits).toLocaleString('ru-RU') %>
+    <% } else { %>
+      0
+    <% } %>
+  </p>
+  <small>Всего посещений</small>
+</div>
+
+<div class="chart-container">
+  <h2>Продажи по месяцам</h2>
+  <div class="chart-wrapper">
+    <canvas id="monthlyChart"></canvas>
+  </div>
+</div>
+
+<div class="chart-container">
+  <h2>Посещаемость по месяцам</h2>
+  <div class="chart-wrapper">
+    <canvas id="visitorsChart"></canvas>
+  </div>
+</div>
 
     <div class="tables-container">
       <div class="top-products">
@@ -90,44 +123,75 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      const monthlyCtx = document.getElementById('monthlyChart');
+      // График продаж по месяцам
+      const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+      const monthlyData = <%- JSON.stringify(monthlyStats || []) %>;
       
-      try {
-        const monthlyData = <%- JSON.stringify(monthlyStats) %>;
-        
-        if (monthlyData && monthlyData.length > 0) {
-          new Chart(monthlyCtx, {
-            type: 'bar',
-            data: {
-              labels: monthlyData.map(s => s.month),
-              datasets: [{
-                label: 'Доход (₽)',
-                data: monthlyData.map(s => parseFloat(s.revenue)),
-                backgroundColor: 'rgba(54, 162, 235, 0.7)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1
-              }]
-            },
-            options: {
-              responsive: true,
-              scales: {
-                y: {
-                  beginAtZero: true,
-                  ticks: {
-                    callback: function(value) {
-                      return value.toLocaleString('ru-RU') + ' ₽';
-                    }
+      if (monthlyData && monthlyData.length > 0) {
+        new Chart(monthlyCtx, {
+          type: 'bar',
+          data: {
+            labels: monthlyData.map(s => s.month),
+            datasets: [{
+              label: 'Доход (₽)',
+              data: monthlyData.map(s => parseFloat(s.revenue || 0)),
+              backgroundColor: 'rgba(54, 162, 235, 0.7)',
+              borderColor: 'rgba(54, 162, 235, 1)',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  callback: function(value) {
+                    return value.toLocaleString('ru-RU') + ' ₽';
                   }
                 }
               }
             }
-          });
-        } else {
-          monthlyCtx.innerHTML = '<p>Нет данных для отображения</p>';
+          }
+        });
+      } else {
+        document.getElementById('monthlyChart').innerHTML = '<p class="no-data">Нет данных о продажах</p>';
+      }
+    
+      const statsData = <%- JSON.stringify(monthlyStat || []) %>;
+  
+  // График посещаемости
+  if (statsData.length > 0) {
+    const visitorsCtx = document.getElementById('visitorsChart').getContext('2d');
+    new Chart(visitorsCtx, {
+      type: 'line',
+      data: {
+        labels: statsData.map(item => item.month),
+        datasets: [{
+          label: 'Уникальные посетители',
+          data: statsData.map(item => item.visitors),
+          borderColor: 'rgb(75, 192, 192)',
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          borderWidth: 2,
+          tension: 0.1
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              precision: 0
+            }
+          }
         }
-      } catch (error) {
-        console.error('Error initializing chart:', error);
-        monthlyCtx.innerHTML = '<p>Ошибка при загрузке графика</p>';
       }
     });
-  </script>
+  } else {
+    document.getElementById('visitorsChart').innerHTML = '<p>Нет данных о посещаемости</p>';
+  }
+
+    });
+    </script>

@@ -67,3 +67,36 @@ export const getRecentOrders = async () => {
   `);
   return rows;
 };
+
+export async function getVisitorStats() {
+  const simpleQuery = `
+    SELECT
+      COUNT(DISTINCT session_id) as unique_visitors,
+      COUNT(*) as total_visits,
+      0.0 as bounce_rate
+    FROM analytics_events
+    WHERE created_at > CURRENT_DATE - INTERVAL '30 days'
+  `;
+
+  try {
+    const { rows: [stats] } = await query(simpleQuery);
+    return stats || { unique_visitors: 0, total_visits: 0, bounce_rate: 0 };
+  } catch (err) {
+    console.error('Simple analytics query failed:', err);
+    return { unique_visitors: 0, total_visits: 0, bounce_rate: 0 };
+  }
+}
+
+export async function getMonthlyStat() {
+  const { rows } = await query(`
+    SELECT 
+      TO_CHAR(DATE_TRUNC('month', created_at), 'YYYY-MM') AS month,
+      COUNT(DISTINCT session_id) AS visitors
+    FROM analytics_events
+    WHERE event_type = 'pageview'
+    GROUP BY DATE_TRUNC('month', created_at)
+    ORDER BY month DESC
+    LIMIT 12
+  `);
+  return rows;
+}
