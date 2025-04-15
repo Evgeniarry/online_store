@@ -121,77 +121,88 @@
   <%- include('../partials/footer') %>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      // График продаж по месяцам
-      const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
-      const monthlyData = <%- JSON.stringify(monthlyStats || []) %>;
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // График продаж по месяцам
+    const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+    const monthlyData = <%- JSON.stringify(monthlyStats || []) %>;
+    
+    // Реверсируем порядок данных для отображения справа налево
+    if (monthlyData && monthlyData.length > 0) {
+      const reversedMonthlyData = [...monthlyData].reverse();
       
-      if (monthlyData && monthlyData.length > 0) {
-        new Chart(monthlyCtx, {
-          type: 'bar',
-          data: {
-            labels: monthlyData.map(s => s.month),
-            datasets: [{
-              label: 'Доход (₽)',
-              data: monthlyData.map(s => parseFloat(s.revenue || 0)),
-              backgroundColor: 'rgba(54, 162, 235, 0.7)',
-              borderColor: 'rgba(54, 162, 235, 1)',
-              borderWidth: 1
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-              y: {
-                beginAtZero: true,
-                ticks: {
-                  callback: function(value) {
-                    return value.toLocaleString('ru-RU') + ' ₽';
-                  }
+      new Chart(monthlyCtx, {
+        type: 'bar',
+        data: {
+          labels: reversedMonthlyData.map(s => s.month),
+          datasets: [{
+            label: 'Доход (₽)',
+            data: reversedMonthlyData.map(s => parseFloat(s.revenue || 0)),
+            backgroundColor: 'rgba(54, 162, 235, 0.7)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'x', // Ось X горизонтальная
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return value.toLocaleString('ru-RU') + ' ₽';
                 }
               }
-            }
-          }
-        });
-      } else {
-        document.getElementById('monthlyChart').innerHTML = '<p class="no-data">Нет данных о продажах</p>';
-      }
-    
-      const statsData = <%- JSON.stringify(monthlyStat || []) %>;
-  
-  // График посещаемости
-  if (statsData.length > 0) {
-    const visitorsCtx = document.getElementById('visitorsChart').getContext('2d');
-    new Chart(visitorsCtx, {
-      type: 'line',
-      data: {
-        labels: statsData.map(item => item.month),
-        datasets: [{
-          label: 'Уникальные посетители',
-          data: statsData.map(item => item.visitors),
-          borderColor: 'rgb(75, 192, 192)',
-          backgroundColor: 'rgba(75, 192, 192, 0.2)',
-          borderWidth: 2,
-          tension: 0.1
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: {
-            beginAtZero: true,
-            ticks: {
-              precision: 0
+            },
+            x: {
+              position: 'bottom'
             }
           }
         }
-      }
-    });
-  } else {
-    document.getElementById('visitorsChart').innerHTML = '<p>Нет данных о посещаемости</p>';
-  }
-
-    });
-    </script>
+      });
+    } else {
+      document.getElementById('monthlyChart').innerHTML = '<p class="no-data">Нет данных о продажах</p>';
+    }
+  
+    // График посещаемости
+    const statsData = <%- JSON.stringify(monthlyStat || []) %>;
+    
+    if (statsData.length > 0) {
+      const reversedStatsData = [...statsData].reverse();
+      const visitorsCtx = document.getElementById('visitorsChart').getContext('2d');
+      
+      new Chart(visitorsCtx, {
+        type: 'line',
+        data: {
+          labels: reversedStatsData.map(item => item.month),
+          datasets: [{
+            label: 'Уникальные посетители',
+            data: reversedStatsData.map(item => item.visitors),
+            borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            borderWidth: 2,
+            tension: 0.1
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                precision: 0
+              }
+            },
+            x: {
+              position: 'bottom'
+            }
+          }
+        }
+      });
+    } else {
+      document.getElementById('visitorsChart').innerHTML = '<p>Нет данных о посещаемости</p>';
+    }
+  });
+</script>
